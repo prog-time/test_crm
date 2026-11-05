@@ -1,0 +1,30 @@
+{
+  "https://github.com/prog-time/test_crm/issues/1": {
+    "status": "open",
+    "local": "tasks/TASK-20261105-mini-crm-implementation.md"
+  },
+  "https://github.com/prog-time/test_crm/issues/2": {
+    "status": "open",
+    "local": "tasks/TASK-20261105-scaffold-vite-react-app.md"
+  },
+  "https://github.com/prog-time/test_crm/issues/3": {
+    "status": "open",
+    "local": "tasks/TASK-20261105-db-schema-rls-migrations.md"
+  },
+  "https://github.com/prog-time/test_crm/issues/4": {
+    "status": "open",
+    "local": "tasks/TASK-20261105-security-check-script.md"
+  },
+  "https://github.com/prog-time/test_crm/issues/5": {
+    "status": "open",
+    "local": "tasks/TASK-20261105-frontend-screens-auth.md"
+  },
+  "https://github.com/prog-time/test_crm/issues/6": {
+    "status": "open",
+    "local": "tasks/TASK-20261105-seed-data-deploy.md"
+  },
+  "https://github.com/prog-time/test_crm/issues/7": {
+    "status": "open",
+    "local": "tasks/TASK-20261105-handover-docs.md"
+  }
+}
