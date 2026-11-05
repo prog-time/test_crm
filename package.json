@@ -11,7 +11,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "typecheck": "tsc -b --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "security-check": "tsx scripts/security-check.ts"
   },
   "dependencies": {
     "@mantine/core": "^9.7.5",
@@ -33,6 +34,7 @@
     "eslint-plugin-react-refresh": "^0.5.7",
     "globals": "^17.14.0",
     "supabase": "^3.0.0",
+    "tsx": "^4.23.15",
     "typescript": "~5.9",
     "typescript-eslint": "^8.72.1",
     "vite": "^8.3.6"
