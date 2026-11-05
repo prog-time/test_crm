@@ -6,9 +6,9 @@ export function NotFoundPage() {
     <Container size="sm" py="xl">
       <Stack align="flex-start">
         <Title order={1}>404</Title>
-        <Text c="dimmed">Page not found.</Text>
+        <Text c="dimmed">Страница не найдена.</Text>
         <Button component={Link} to="/" variant="light">
-          Back to home
+          На главную
         </Button>
       </Stack>
     </Container>
