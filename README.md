@@ -2,6 +2,8 @@
 
 Mini CRM frontend: Vite + React + TypeScript, Mantine, react-router, TanStack Query, Supabase.
 
+Доступ к демо-версии (адрес и учётные записи) передаётся отдельно и в репозитории не хранится.
+
 ## Quick start
 
 Requires Node 20 (`nvm use`).
@@ -126,3 +128,65 @@ npm run security-check
 - Дополнительно: исполнитель не создаёт задачи, не видит профили других исполнителей; анонимный клиент ничего не получает из `tasks`, `objects`, `profiles`, `task_status_history` и не вызывает RPC.
 
 Запуск в CI не предусмотрен (нужен живой проект Supabase и секреты).
+
+## Демо-данные (seed)
+
+`supabase/seed.sql` наполняет базу демо-данными: 3 объекта и 9 задач во всех статусах (`new`, `in_progress`, `review`, `accepted`, `rework`), включая задачу, прошедшую цикл доработки. Данные создаются от имени нужных пользователей (подмена `request.jwt.claims`, обычные `INSERT` и `change_task_status`), поэтому история статусов получается настоящими триггерами. Паролей и пользователей в файле нет.
+
+Демо-пользователи ищутся в `auth.users` **по email**: `manager@test-crm.example` (постановщик, Иван Петров), `executor1@test-crm.example` (Алексей Смирнов), `executor2@test-crm.example` (Мария Козлова). Если хотя бы одного нет, скрипт пишет `NOTICE` и ничего не вставляет; если демо-объекты уже есть (по названию), тоже пропускается. Повторный запуск безопасен. Поэтому `supabase db reset` на пустой базе seed не меняет.
+
+Локально:
+
+```bash
+npx supabase db reset
+psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f supabase/local/demo-users.sql   # только локально, открытые dev-пароли
+psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f supabase/seed.sql
+```
+
+`supabase/local/demo-users.sql` не входит в `[db.seed] sql_paths` (там только `./seed.sql`), поэтому `supabase db push --include-seed` никогда не отправит локальных пользователей в облако.
+
+## Деплой
+
+Схема: база и авторизация - облачный проект Supabase, фронтенд - Vercel через Git-интеграцию (production-ветка `main`). GitHub Actions для деплоя не используется.
+
+### 1. Supabase
+
+1. Создайте проект на [supabase.com](https://supabase.com) (Dashboard -> New project) и запомните Project ref (`Project Settings -> General`).
+2. Примените миграции:
+   ```bash
+   npx supabase login
+   npx supabase link --project-ref <ref>
+   npx supabase db push
+   ```
+   Не используйте `--include-seed`: демо-данные заливаются отдельно (шаг 4).
+3. Настройки авторизации (`Authentication`):
+   - `Sign In / Providers -> Allow new users to sign up` = **выключить** (регистрации в приложении нет, пользователей создаёт администратор);
+   - `Sign In / Providers -> Email -> Confirm email` = **выключить** (либо создавать пользователей с Auto Confirm, см. следующий шаг).
+4. Создайте 3 демо-пользователя: `Authentication -> Users -> Add user -> Create new user`, **Auto Confirm User** включён. Email строго такие (по ним seed находит пользователей), пароли придумайте сами и не сохраняйте в репозитории:
+   - `manager@test-crm.example`
+   - `executor1@test-crm.example`
+   - `executor2@test-crm.example`
+5. Откройте `SQL Editor`, вставьте содержимое `supabase/seed.sql` и выполните (роль `postgres`). Ожидаемый результат: `NOTICE: seed done: 3 objects, 9 tasks`. Повторный запуск ничего не дублирует.
+
+### 2. Vercel
+
+1. `Add New -> Project`, импортируйте репозиторий. Framework Preset: **Vite**; Build Command `npm run build`, Output Directory `dist` (так же заданы в `vercel.json`, там же SPA-rewrite всех путей на `/index.html`). Node.js - 20+ (`.nvmrc` и `engines` в `package.json`).
+2. `Settings -> Environment Variables` - **только** две переменные (Production):
+   - `VITE_SUPABASE_URL` - `Project Settings -> API -> Project URL`;
+   - `VITE_SUPABASE_ANON_KEY` - там же, ключ `anon` / publishable.
+3. `Settings -> Git -> Production Branch` = `main`.
+4. Отключите preview-деплои других веток: `Settings -> Git -> Ignored Build Step -> Custom`, команда
+   ```bash
+   [ "$VERCEL_GIT_COMMIT_REF" != "main" ] && exit 0 || exit 1
+   ```
+   (код `0` - сборку пропустить, `1` - собирать), либо соответствующий переключатель в настройках Git.
+5. Выполните деплой из `main` и скопируйте итоговый URL.
+
+### 3. Supabase: URL приложения
+
+`Authentication -> URL Configuration`: **Site URL** = URL проекта на Vercel (`https://<project>.vercel.app`). При необходимости добавьте его же в Redirect URLs.
+
+### Важно
+
+- Ключ `service_role` (и `sb_secret_...`) **не нужен** ни приложению, ни деплою, ни seed: в Vercel и в код его класть нельзя. Фронтенд работает только с `anon` ключом, права проверяет RLS.
+- Демо-пароли в репозитории и README не хранятся, доступ передаётся ревьюерам отдельно.
