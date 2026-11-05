@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from '../types/database'
 
 const supabaseUrl: string | undefined = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey: string | undefined = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -9,5 +10,4 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
-// TODO(stage 2): pass the generated `Database` type: createClient<Database>(...)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
