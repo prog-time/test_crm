@@ -17,10 +17,33 @@ npm run dev
 - `npm run dev` - dev server
 - `npm run build` - typecheck + production build
 - `npm run lint` - eslint
+- `npm run test` - unit/component tests (vitest, `vitest run`)
 - `npm run typecheck` - `tsc --noEmit` (app, `vite.config.ts` and `scripts/`)
 - `npm run security-check` - proves the database rejects forbidden actions (see "Проверка безопасности")
 
 Supabase CLI is a devDependency: `npx supabase <command>`. Migrations live in `supabase/migrations/`.
+
+## Экраны и роли
+
+Вход по email и паролю (регистрации в UI нет; пользователей создаёт администратор). Неавторизованного пользователя любой защищённый маршрут перенаправляет на `/login`. После входа открывается стартовый экран роли: исполнитель - `/my-tasks`, постановщик - `/objects`.
+
+| Маршрут | Экран | Постановщик | Исполнитель |
+| --- | --- | --- | --- |
+| `/login` | Вход | да | да |
+| `/objects` | Список объектов | все объекты, создание / правка / удаление | только объекты со своими задачами, без кнопок управления |
+| `/objects/:id` | Карточка объекта | все задачи объекта, форма создания задачи (название, описание, исполнитель) | только свои задачи |
+| `/tasks/:id` | Карточка задачи | правка и удаление, пока задача не `accepted`; принять / на доработку (комментарий обязателен) из `review` | взять в работу (`new`, `rework`), отправить на проверку (`in_progress`) |
+| `/my-tasks` | Мои задачи с фильтром по статусу | недоступно (редирект на `/objects`) | да |
+
+Кнопки в карточке задачи определяет единственная функция `getAvailableActions(role, status, isAssignee)` (`src/lib/taskActions.ts`); она повторяет матрицу переходов БД, но ничего не защищает: права проверяет база. Ошибки PostgREST/RPC переводятся на русский в `src/lib/errors.ts` и показываются уведомлениями. Общего списка всех задач у постановщика нет: достаточно карточек объектов.
+
+## Тесты
+
+```bash
+npm run test   # vitest: матрица getAvailableActions, тексты ошибок, модалка доработки
+```
+
+Тесты не требуют Supabase и запускаются в CI отдельной job `test`.
 
 ## Database
 
